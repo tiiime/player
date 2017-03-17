@@ -16,10 +16,10 @@ public abstract class Store<S> implements IDispatcher {
 
     public abstract void unSubscribe(Subscriber subscriber);
 
-    public static <S> CoreStore<S> create(S currentState, IReducer<S> reducer, Middleware<S>... middlewares) {
+    public static <S> Store<S> create(S currentState, IReducer<S> reducer, Middleware<S>... middlewares) {
         return new CoreStore<S>(currentState, reducer, middlewares);
     }
-    public static <S> CoreStore<S> create(S currentState, IReducer<S> reducer) {
+    public static <S> Store<S> create(S currentState, IReducer<S> reducer) {
         return new CoreStore<S>(currentState, reducer, null);
     }
 
