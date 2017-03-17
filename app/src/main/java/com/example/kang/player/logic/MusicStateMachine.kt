@@ -1,8 +1,12 @@
 package com.example.kang.player.logic
 
-import com.example.kang.player.logic.state.*
+import android.net.Uri
+import android.os.Message
+import com.example.kang.player.util.IState
+import com.example.kang.player.util.State
 import com.example.kang.player.util.StateMachine
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.source.MediaSource
 
 
 /**
@@ -21,13 +25,13 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         internal val CMD_SWITCH = 0x06
     }
 
-    private val initState = InitState(player)
-    private val seekState = SeekState(player)
-    private val pauseState = PauseState(player)
-    private val resetState = ResetInfoState(player)
-    private val bufferState = BufferState(player)
-    private val switchState = SwitchSongState(player)
-    private val playingState = PlayingState(player)
+    private val initState = InitState()
+    private val seekState = SeekState()
+    private val pauseState = PauseState()
+    private val resetState = ResetInfoState()
+    private val bufferState = BufferState()
+    private val switchState = SwitchSongState()
+    private val playingState = PlayingState()
 
     /**
      *
@@ -57,5 +61,66 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
                     addState(switchState, resetState)
 
         setInitialState(pauseState)
+    }
+
+    fun switch(uri: Uri) {
+        val msg = obtainMessage(CMD_SWITCH)
+        msg.obj = uri
+        sendMessage(msg)
+    }
+
+
+    class BufferState() : State()
+
+    /**
+     * Created by kang on 17-3-17.
+     */
+    internal inner class InitState() : State() {
+
+        override fun enter() {
+            super.enter()
+            player.playWhenReady = true
+        }
+
+        override fun processMessage(msg: Message?): Boolean {
+            return super.processMessage(msg)
+        }
+
+        override fun exit() {
+            super.exit()
+            player.release()
+        }
+    }
+
+    internal inner class PauseState() : State() {
+        override fun enter() {
+            super.enter()
+            player.playWhenReady = false
+        }
+
+        override fun processMessage(msg: Message?): Boolean {
+            return super.processMessage(msg)
+        }
+
+        override fun exit() {
+            super.exit()
+            player.playWhenReady = true
+        }
+    }
+
+    internal inner class PlayingState() : State()
+
+    internal inner class ResetInfoState() : State()
+
+    internal inner class SeekState() : State()
+
+    internal inner class SwitchSongState() : State() {
+        override fun processMessage(msg: Message) = when (msg.what) {
+            MusicStateMachine.CMD_SWITCH -> {
+                player.prepare(msg.obj as MediaSource?)
+                IState.HANDLED
+            }
+            else -> super.processMessage(msg)
+        }
     }
 }
