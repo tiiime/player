@@ -26,9 +26,6 @@ class PlayerReducer : IReducer<PlayerState> {
             Actions.ACTION_PAUSE_SONG -> return state.copy().apply {
                 playing = false
             }
-            Actions.ACTION_SEEK_SONG -> {
-
-            }
             Actions.ACTION_PLAY_SONG -> return state.copy().apply {
                 playing = true
             }
