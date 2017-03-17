@@ -69,26 +69,32 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         sendMessage(msg)
     }
 
-
-    class BufferState() : State()
-
-    /**
-     * Created by kang on 17-3-17.
-     */
     internal inner class InitState() : State() {
 
-        override fun enter() {
-            super.enter()
-            player.playWhenReady = true
-        }
-
-        override fun processMessage(msg: Message?): Boolean {
-            return super.processMessage(msg)
+        override fun processMessage(msg: Message) = when (msg.what) {
+            CMD_SWITCH -> {
+                deferMessage(msg)
+                transitionTo(switchState)
+                IState.HANDLED
+            }
+            CMD_SEEK -> {
+                deferMessage(msg)
+                transitionTo(seekState)
+                IState.HANDLED
+            }
+            else -> super.processMessage(msg)
         }
 
         override fun exit() {
             super.exit()
             player.release()
+        }
+    }
+
+    internal inner class BufferState() : State() {
+        override fun enter() {
+            super.enter()
+            player.playWhenReady = true
         }
     }
 
@@ -101,23 +107,32 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         override fun processMessage(msg: Message?): Boolean {
             return super.processMessage(msg)
         }
-
-        override fun exit() {
-            super.exit()
-            player.playWhenReady = true
-        }
     }
 
     internal inner class PlayingState() : State()
 
-    internal inner class ResetInfoState() : State()
+    internal inner class ResetInfoState() : State() {
+        override fun enter() {
+            super.enter()
+            player.stop()
+        }
+    }
 
-    internal inner class SeekState() : State()
+    internal inner class SeekState() : State() {
+        override fun processMessage(msg: Message) = when (msg.what) {
+            CMD_SEEK -> {
+                player.seekTo(msg.obj as Long)
+                IState.HANDLED
+            }
+            else -> super.processMessage(msg)
+        }
+    }
 
     internal inner class SwitchSongState() : State() {
         override fun processMessage(msg: Message) = when (msg.what) {
-            MusicStateMachine.CMD_SWITCH -> {
+            CMD_SWITCH -> {
                 player.prepare(msg.obj as MediaSource?)
+                transitionTo(bufferState)
                 IState.HANDLED
             }
             else -> super.processMessage(msg)
