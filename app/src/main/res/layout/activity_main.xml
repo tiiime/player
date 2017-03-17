@@ -73,7 +73,7 @@
                     android:id="@+id/play"
                     android:layout_weight="1"
                     android:tint="@color/colorAccent"
-                    android:src="@drawable/exo_controls_play"
+                    android:src="@drawable/play_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
             <ImageView
