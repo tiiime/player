@@ -11,11 +11,15 @@ import com.example.redux.IReducer
 class PlayerReducer : IReducer<PlayerState> {
     override fun reduce(state: PlayerState, action: Action<Any>): PlayerState {
         when (action.type) {
-            Actions.ACTION_PREVIOUS_SONG -> {
-
+            Actions.ACTION_PREVIOUS_SONG -> return state.copy().apply {
+                index = if (index == 0) {
+                    playlist.size - 1
+                } else {
+                    (index - 1) % playlist.size
+                }
             }
-            Actions.ACTION_NEXT_SONG -> {
-
+            Actions.ACTION_NEXT_SONG -> return state.copy().apply {
+                index = (index + 1) % playlist.size
             }
             Actions.ACTION_PAUSE_SONG -> return state.copy().apply {
                 playing = false
