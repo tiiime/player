@@ -18,7 +18,7 @@ import java.util.*
 class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
 
     val store: Store<PlayerState> = Store.create(
-            PlayerState(ArrayList<Music>(), 0, PlayMode.ORDER, false),
+            PlayerState(ArrayList<Music>(), 0, PlayMode.ORDER, false, null),
             PlayerReducer(),
             LoggerMiddleware(), PlayerMiddleware())
 
@@ -29,8 +29,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
         initClickEvent()
     }
 
-    override fun onStateUpdate() = with(store.state) {
+    override fun onStateUpdate(): Unit = with(store.state) {
         play.isSelected = playing
+        targetMusic?.let {
+            store.dispatch(PlayerActionCreator.switch(it.uri))
+        }
     }
 
     override fun onResume() {
