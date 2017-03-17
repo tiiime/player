@@ -15,12 +15,11 @@ class PlayerMiddleware : Middleware<PlayerState> {
 
     override fun create(store: Store<PlayerState>, nextDispatcher: IDispatcher): IDispatcher {
         return IDispatcher { action ->
-            dispatchAction(action, nextDispatcher)
+            if (store.state.playlist.isNotEmpty()) dispatchAction(action, nextDispatcher)
         }
     }
 
     fun dispatchAction(action: Action<Any>, nextDispatcher: IDispatcher) {
-
         when (action.type) {
             Actions.ACTION_PAUSE_SONG -> {
             }
