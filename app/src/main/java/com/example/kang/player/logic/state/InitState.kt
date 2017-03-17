@@ -5,13 +5,15 @@ import com.example.kang.player.util.State
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.SimpleExoPlayer
 
+
 /**
- * Created by kang on 17-3-16.
+ * Created by kang on 17-3-17.
  */
-class PauseState(val player: ExoPlayer) : State() {
+class InitState(val player: ExoPlayer) : State() {
+
     override fun enter() {
         super.enter()
-        player.playWhenReady = false
+        player.playWhenReady = true
     }
 
     override fun processMessage(msg: Message?): Boolean {
@@ -20,6 +22,6 @@ class PauseState(val player: ExoPlayer) : State() {
 
     override fun exit() {
         super.exit()
-        player.playWhenReady = true
+        player.release()
     }
 }
