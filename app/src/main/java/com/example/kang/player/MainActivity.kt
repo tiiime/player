@@ -53,17 +53,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
         R.id.name -> {
 
         }
-        R.id.currentTime -> {
-
-        }
         R.id.seekBar -> {
-
-        }
-        R.id.leftTime -> {
 
         }
         R.id.previous -> {
             store.dispatch(PlayerActionCreator.prevSong())
+        }
+        R.id.next -> {
+            store.dispatch(PlayerActionCreator.nextSong())
         }
         R.id.play -> {
             if (play.isSelected) {
@@ -71,8 +68,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
             } else {
                 store.dispatch(PlayerActionCreator.play())
             }
-        }
-        R.id.next -> {
         }
         else -> {
         }
