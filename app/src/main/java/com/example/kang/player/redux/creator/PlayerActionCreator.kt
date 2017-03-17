@@ -11,6 +11,6 @@ object PlayerActionCreator : Action<Any>("", "") {
     fun seekTo(seek: Long) = Action(Actions.ACTION_SEEK_SONG, seek)
     fun nextSong(uri: Uri) = Action(Actions.ACTION_NEXT_SONG, uri)
     fun prevSong(uri: Uri) = Action(Actions.ACTION_PREVIOUS_SONG, uri)
-    fun pause() = Action(Actions.ACTION_SEEK_SONG, Any())
+    fun pause() = Action(Actions.ACTION_PAUSE_SONG, Any())
     fun play() = Action(Actions.ACTION_PLAY_SONG,Any())
 }
