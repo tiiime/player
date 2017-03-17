@@ -17,9 +17,11 @@ class PlayerReducer : IReducer<PlayerState> {
                 } else {
                     (index - 1) % playlist.size
                 }
+                targetMusic = playlist[index]
             }
             Actions.ACTION_NEXT_SONG -> return state.copy().apply {
                 index = (index + 1) % playlist.size
+                targetMusic = playlist[index]
             }
             Actions.ACTION_PAUSE_SONG -> return state.copy().apply {
                 playing = false
