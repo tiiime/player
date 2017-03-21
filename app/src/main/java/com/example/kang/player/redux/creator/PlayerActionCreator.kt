@@ -1,5 +1,6 @@
 package com.example.kang.player.redux.creator
 
+import com.example.kang.player.model.Music
 import com.example.kang.player.redux.Actions
 import com.example.redux.Action
 
@@ -12,5 +13,6 @@ object PlayerActionCreator : Action<Any>("", "") {
     fun prevSong() = Action(Actions.ACTION_PREVIOUS_SONG, Any())
     fun pause() = Action(Actions.ACTION_PAUSE_SONG, Any())
     fun play() = Action(Actions.ACTION_PLAY_SONG,Any())
-    fun updateInfo(playing: Boolean) = Action(Actions.ACTION_UPDATE_INFO, playing)
+    fun updatePlayStateInfo(playing: Boolean) = Action(Actions.ACTION_UPDATE_PLAY_STATE_INFO, playing)
+    fun updateSongInfo(music: Music) = Action(Actions.ACTION_UPDATE_SONG_INFO, music)
 }
