@@ -111,6 +111,7 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
 
         override fun exit() {
             super.exit()
+            player.playWhenReady = false
             player.release()
         }
     }

@@ -118,9 +118,8 @@ class PlayerService : Service() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
-        playerSm.songPause()
         playerSm.stop()
+        super.onDestroy()
     }
 
     override fun onBind(intent: Intent): IBinder {
