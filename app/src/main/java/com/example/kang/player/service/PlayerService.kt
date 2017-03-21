@@ -8,6 +8,9 @@ import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
 import com.example.kang.player.logic.MusicStateMachine
+import com.example.kang.player.model.Music
+import com.example.kang.player.model.PlayMode
+import com.example.kang.player.model.PlayerState
 import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
@@ -21,6 +24,11 @@ import com.google.android.exoplayer2.util.Util
 
 
 class PlayerService : Service() {
+    private val playlist: MutableList<Music> = arrayListOf()
+    private var mode: PlayMode = PlayMode.ORDER
+    private val DEFAULT_MUSIC_INDEX = -1
+
+    private var index: Int = DEFAULT_MUSIC_INDEX
 
     val player: ExoPlayer by lazy {
         // 1. Create a default TrackSelector
@@ -41,6 +49,13 @@ class PlayerService : Service() {
     inner class PlayerServiceHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
+                MSG_INIT_SERVICE -> {
+                    val state = msg.obj as PlayerState
+                    playlist.clear()
+                    playlist.addAll(state.playlist)
+                    mode = state.playMode
+                    index = state.index
+                }
                 MSG_PAUSE -> {
                     pause()
                 }
@@ -63,18 +78,38 @@ class PlayerService : Service() {
         }
     }
 
+    private fun next(){
+        index = (index + 1) % playlist.size
+        switch(playlist[index].uri)
+        playerSm.songPlay()
+    }
+
+    private fun previous(){
+        index = if (index <= 0) {
+            playlist.size - 1
+        } else {
+            (index - 1) % playlist.size
+        }
+
+        switch(playlist[index].uri)
+        playerSm.songPlay()
+    }
+
     private fun pause() {
         playerSm.songPause()
     }
 
     private fun play() {
+        if (index == DEFAULT_MUSIC_INDEX) {
+            ++index
+            switch(playlist[index].uri)
+        }
         playerSm.songPlay()
     }
 
     private fun switch(uri: Uri) {
         val source = createSourceFromUri(uri)
         playerSm.songSwitch(source)
-        playerSm.songPlay()
     }
 
     override fun onCreate() {
@@ -107,6 +142,7 @@ class PlayerService : Service() {
     }
 
     companion object {
+        val MSG_INIT_SERVICE = -1
         val MSG_PLAY = 0x00
         val MSG_PAUSE = 0x01
         val MSG_SWITCH = 0x02
