@@ -26,8 +26,6 @@ import com.google.android.exoplayer2.util.Util
 class PlayerService : Service() {
     private val playlist: MutableList<Music> = arrayListOf()
     private var mode: PlayMode = PlayMode.ORDER
-
-
     private var index: Int = DEFAULT_MUSIC_INDEX
 
     val player: ExoPlayer by lazy {
@@ -53,8 +51,8 @@ class PlayerService : Service() {
                     switch(msg.obj as Uri)
                     play()
                 }
-                MSG_GET_INFO->{
-                    val temp = Message.obtain(null,MSG_GET_INFO)
+                MSG_GET_INFO -> {
+                    val temp = Message.obtain(null, MSG_GET_INFO)
                     temp.obj = player.playWhenReady
                     msg.replyTo.send(temp)
                     return
@@ -69,7 +67,7 @@ class PlayerService : Service() {
         }
 
         /**
-         * accept state when {@link PlayerService#playlist} is empty
+         * accept state when [PlayerService.playlist] is empty
          */
         private fun useStateOrIgnore(msg: Message) {
             val state = msg.obj as PlayerState
@@ -85,13 +83,13 @@ class PlayerService : Service() {
         }
     }
 
-    private fun next(){
+    private fun next() {
         index = (index + 1) % playlist.size
         switch(playlist[index].uri)
         playerSm.songPlay()
     }
 
-    private fun previous(){
+    private fun previous() {
         index = if (index <= 0) {
             playlist.size - 1
         } else {
