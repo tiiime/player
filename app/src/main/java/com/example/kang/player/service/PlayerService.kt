@@ -26,7 +26,7 @@ import com.google.android.exoplayer2.util.Util
 class PlayerService : Service() {
     private val playlist: MutableList<Music> = arrayListOf()
     private var mode: PlayMode = PlayMode.ORDER
-    private val DEFAULT_MUSIC_INDEX = -1
+
 
     private var index: Int = DEFAULT_MUSIC_INDEX
 
@@ -49,21 +49,9 @@ class PlayerService : Service() {
     inner class PlayerServiceHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                MSG_INIT_SERVICE -> {
-                    val state = msg.obj as PlayerState
-                    playlist.clear()
-                    playlist.addAll(state.playlist)
-                    mode = state.playMode
-                    index = state.index
-                }
-                MSG_PAUSE -> {
-                    pause()
-                }
-                MSG_PLAY -> {
-                    play()
-                }
                 MSG_SWITCH -> {
                     switch(msg.obj as Uri)
+                    play()
                 }
                 MSG_GET_INFO->{
                     val temp = Message.obtain(null,MSG_GET_INFO)
@@ -71,10 +59,29 @@ class PlayerService : Service() {
                     msg.replyTo.send(temp)
                     return
                 }
-                else -> {
-                    super.handleMessage(msg)
-                }
+                MSG_INIT_SERVICE -> useStateOrIgnore(msg)
+                MSG_PAUSE -> pause()
+                MSG_PLAY -> play()
+                MSG_NEXT_SONG -> next()
+                MSG_PREV_SONG -> previous()
+                else -> super.handleMessage(msg)
             }
+        }
+
+        /**
+         * accept state when {@link PlayerService#playlist} is empty
+         */
+        private fun useStateOrIgnore(msg: Message) {
+            val state = msg.obj as PlayerState
+
+            if (playlist.isNotEmpty()) {
+                return
+            }
+
+            playlist.clear()
+            playlist.addAll(state.playlist)
+            mode = state.playMode
+            index = state.index
         }
     }
 
@@ -141,10 +148,15 @@ class PlayerService : Service() {
     }
 
     companion object {
+        val DEFAULT_MUSIC_INDEX = -1
+
         val MSG_INIT_SERVICE = -1
         val MSG_PLAY = 0x00
         val MSG_PAUSE = 0x01
         val MSG_SWITCH = 0x02
         val MSG_GET_INFO = 0x03
+        val MSG_NEXT_SONG = 0x04
+        val MSG_PREV_SONG = 0x05
+
     }
 }

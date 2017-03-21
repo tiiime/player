@@ -45,17 +45,23 @@ class PlayerMiddleware : Middleware<PlayerState> {
         this.store = store
 
         return IDispatcher { action ->
-            if (store.state.playlist.isNotEmpty()) dispatchAction(store, action, nextDispatcher)
+            if (store.state.playlist.isNotEmpty()) dispatchAction(action, nextDispatcher)
         }
     }
 
-    fun dispatchAction(store: Store<PlayerState>, action: Action<Any>, nextDispatcher: IDispatcher) {
+    fun dispatchAction(action: Action<Any>, nextDispatcher: IDispatcher) {
         when (action.type) {
-            Actions.ACTION_PAUSE_SONG -> {
-                messenger?.send(Message.obtain(null, PlayerService.MSG_PAUSE))
-            }
             Actions.ACTION_SEEK_SONG -> {
                 return
+            }
+            Actions.ACTION_NEXT_SONG -> {
+                messenger?.send(Message.obtain(null, PlayerService.MSG_NEXT_SONG))
+            }
+            Actions.ACTION_PREVIOUS_SONG -> {
+                messenger?.send(Message.obtain(null, PlayerService.MSG_PREV_SONG))
+            }
+            Actions.ACTION_PAUSE_SONG -> {
+                messenger?.send(Message.obtain(null, PlayerService.MSG_PAUSE))
             }
             Actions.ACTION_PLAY_SONG -> {
                 messenger?.send(Message.obtain(null, PlayerService.MSG_PLAY))
