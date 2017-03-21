@@ -1,5 +1,6 @@
 package com.example.kang.player.model
 
+import android.graphics.Bitmap
 import android.net.Uri
 import java.util.*
 
@@ -11,6 +12,7 @@ data class PlayerState (
         var index: Int,
         var playMode: PlayMode,
         var playing: Boolean,
+        var currentMusic: Music?,
         var targetMusic: Music?) : Cloneable {
 
     override public fun clone(): PlayerState {
@@ -19,13 +21,13 @@ data class PlayerState (
             list.add(it.copy())
         }
 
-        return PlayerState(list, index, playMode, playing, null)
+        return PlayerState(list, index, playMode, playing, currentMusic, null)
     }
 }
 
-data class Music(val name: String, val duration: Long, val uri: Uri) : Cloneable {
+data class Music(val name: String, val duration: Long, val uri: Uri, var album: Bitmap?) : Cloneable {
     override fun clone(): Music {
-        return Music(name, duration, uri)
+        return Music(name, duration, uri, null)
     }
 }
 
