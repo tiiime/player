@@ -1,9 +1,7 @@
 package com.example.kang.player.logic
 
 import android.os.Message
-import com.example.kang.player.util.IState
-import com.example.kang.player.util.State
-import com.example.kang.player.util.StateMachine
+import com.example.statemachien.StateMachine
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.source.MediaSource
 
@@ -81,30 +79,30 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         sendMessage(CMD_STOP_MACHINE)
     }
 
-    internal inner class InitState : State() {
+    internal inner class InitState : com.example.statemachien.State() {
 
         override fun processMessage(msg: Message) = when (msg.what) {
             CMD_STOP_MACHINE -> {
                 transitionToHaltingState()
-                IState.HANDLED
+                com.example.statemachien.IState.HANDLED
             }
             CMD_SWITCH -> {
                 deferMessage(msg)
                 transitionTo(switchState)
-                IState.HANDLED
+                com.example.statemachien.IState.HANDLED
             }
             CMD_SEEK -> {
                 deferMessage(msg)
                 transitionTo(seekState)
-                IState.HANDLED
+                com.example.statemachien.IState.HANDLED
             }
             CMD_PLAY -> {
                 transitionTo(playingState)
-                IState.HANDLED
+                com.example.statemachien.IState.HANDLED
             }
             CMD_PAUSE -> {
                 transitionTo(pauseState)
-                IState.HANDLED
+                com.example.statemachien.IState.HANDLED
             }
             else -> super.processMessage(msg)
         }
@@ -115,14 +113,14 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         }
     }
 
-    internal inner class BufferState : State() {
+    internal inner class BufferState : com.example.statemachien.State() {
         override fun enter() {
             super.enter()
             player.playWhenReady = true
         }
     }
 
-    internal inner class PauseState : State(){
+    internal inner class PauseState : com.example.statemachien.State(){
         override fun enter() {
             super.enter()
             player.playWhenReady = false
@@ -133,7 +131,7 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         }
     }
 
-    internal inner class PlayingState : State() {
+    internal inner class PlayingState : com.example.statemachien.State() {
         override fun enter() {
             super.enter()
         }
@@ -143,27 +141,27 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         }
     }
 
-    internal inner class ResetInfoState : State() {
+    internal inner class ResetInfoState : com.example.statemachien.State() {
         override fun enter() {
             super.enter()
         }
     }
 
-    internal inner class SeekState : State() {
+    internal inner class SeekState : com.example.statemachien.State() {
         override fun processMessage(msg: Message) = when (msg.what) {
             CMD_SEEK -> {
                 player.seekTo(msg.obj as Long)
-                IState.HANDLED
+                com.example.statemachien.IState.HANDLED
             }
             else -> super.processMessage(msg)
         }
     }
 
-    internal inner class SwitchSongState : State() {
+    internal inner class SwitchSongState : com.example.statemachien.State() {
         override fun processMessage(msg: Message) = when (msg.what) {
             CMD_SWITCH -> {
                 player.prepare(msg.obj as MediaSource?)
-                IState.HANDLED
+                com.example.statemachien.IState.HANDLED
             }
             else -> super.processMessage(msg)
         }
