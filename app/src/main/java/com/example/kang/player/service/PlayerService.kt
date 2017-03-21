@@ -11,26 +11,32 @@ import com.example.kang.player.logic.MusicStateMachine
 import com.example.kang.player.model.Music
 import com.example.kang.player.model.PlayMode
 import com.example.kang.player.model.PlayerState
+import com.example.kang.player.util.ExoEventListener
+import com.example.kang.player.util.getArtistName
+import com.example.kang.player.util.getArtwork
+import com.example.kang.player.util.getSongName
 import com.google.android.exoplayer2.DefaultLoadControl
-import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.AdaptiveVideoTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 
 
-class PlayerService : Service() {
+class PlayerService : Service(), ExoEventListener {
     private val playlist: MutableList<Music> = arrayListOf()
     private var mode: PlayMode = PlayMode.ORDER
     private var index: Int = DEFAULT_MUSIC_INDEX
 
-    private val clientMessgengerList: MutableList<Messenger> = arrayListOf()
+    private val clientMessengerList: MutableList<Messenger> = arrayListOf()
 
-    val player: ExoPlayer by lazy {
+    val player: SimpleExoPlayer by lazy {
         // 1. Create a default TrackSelector
         val bandwidthMeter = DefaultBandwidthMeter()
         val videoTrackSelectionFactory = AdaptiveVideoTrackSelection.Factory(bandwidthMeter)
@@ -54,6 +60,8 @@ class PlayerService : Service() {
                     play()
                 }
                 MSG_GET_INFO -> {
+                    clientMessengerList.add(msg.replyTo)
+
                     val temp = Message.obtain(null, MSG_GET_INFO)
                     temp.obj = player.playWhenReady
                     msg.replyTo.send(temp)
@@ -64,7 +72,7 @@ class PlayerService : Service() {
                 MSG_PLAY -> play()
                 MSG_NEXT_SONG -> next()
                 MSG_PREV_SONG -> previous()
-                MSG_UN_SUBSCRIBE_CLIENT -> clientMessgengerList.remove(msg.replyTo)
+                MSG_UN_SUBSCRIBE_CLIENT -> clientMessengerList.remove(msg.replyTo)
                 else -> super.handleMessage(msg)
             }
         }
@@ -120,9 +128,36 @@ class PlayerService : Service() {
         playerSm.songSwitch(source)
     }
 
+    override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
+        trackGroups?.let {
+            (0..trackGroups.length - 1).forEach { i ->
+                val trackGroup = trackGroups.get(i)
+                (0..trackGroup.length - 1).forEach { j ->
+                    val metadata = trackGroup.getFormat(j).metadata
+                    metadata?.let {
+                        notifyClient(Music(
+                                "${metadata.getSongName()}-${metadata.getArtistName()}",
+                                0,
+                                Uri.EMPTY,
+                                metadata.getArtwork()
+                        ))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun notifyClient(music: Music) {
+        val msg = Message.obtain(null, MSG_SWITCH)
+        msg.obj = music
+
+        clientMessengerList.forEach { it.send(msg) }
+    }
+
     override fun onCreate() {
         super.onCreate()
         playerSm.start()
+        player.addListener(this)
     }
 
     override fun onDestroy() {

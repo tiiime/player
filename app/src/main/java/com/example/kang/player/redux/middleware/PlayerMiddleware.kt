@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Message
 import android.os.Messenger
+import com.example.kang.player.model.Music
 import com.example.kang.player.model.PlayerState
 import com.example.kang.player.redux.Actions
 import com.example.kang.player.redux.creator.PlayerActionCreator
@@ -114,7 +115,10 @@ class PlayerMiddleware : Middleware<PlayerState> {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 PlayerService.MSG_GET_INFO -> {
-                    store?.dispatch(PlayerActionCreator.updateInfo(msg.obj as Boolean))
+                    store?.dispatch(PlayerActionCreator.updatePlayStateInfo(msg.obj as Boolean))
+                }
+                PlayerService.MSG_SWITCH -> {
+                    store?.dispatch(PlayerActionCreator.updateSongInfo(msg.obj as Music))
                 }
                 else -> super.handleMessage(msg)
             }
