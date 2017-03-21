@@ -37,6 +37,7 @@ class PlayerMiddleware : Middleware<PlayerState> {
     }
 
     fun releasePlayer(context: Context) {
+        sendUnSubscribeClientMsg()
         context.unbindService(playerServiceConnection)
         messenger = null
     }
@@ -77,16 +78,24 @@ class PlayerMiddleware : Middleware<PlayerState> {
             messenger = Messenger(service)
             playerBind = true
 
-            initPlayerService()
+            tryInitPlayerService()
             requestPlayerState()
         }
 
-        private fun initPlayerService() {
+        /**
+         * set playlist if [PlayerService.playlist] isEmpty
+         * else ignore action
+         */
+        private fun tryInitPlayerService() {
             val msg = Message.obtain(null,PlayerService.MSG_INIT_SERVICE)
             msg.obj = store?.state
             messenger?.send(msg)
         }
 
+        /**
+         * request [PlayerService] current playing state
+         * in this action we will register our [localMessenger] to [PlayerService]
+         */
         private fun requestPlayerState() {
             val msg = Message.obtain(null, PlayerService.MSG_GET_INFO)
             msg.replyTo = localMessenger
@@ -98,6 +107,9 @@ class PlayerMiddleware : Middleware<PlayerState> {
         }
     }
 
+    /**
+     * handle message from [PlayerService]
+     */
     internal inner class LocalPlayerHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
@@ -107,5 +119,11 @@ class PlayerMiddleware : Middleware<PlayerState> {
                 else -> super.handleMessage(msg)
             }
         }
+    }
+
+    private fun sendUnSubscribeClientMsg() {
+        val msg = Message.obtain(null, PlayerService.MSG_UN_SUBSCRIBE_CLIENT)
+        msg.replyTo = localMessenger
+        messenger?.send(msg)
     }
 }

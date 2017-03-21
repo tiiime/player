@@ -28,6 +28,8 @@ class PlayerService : Service() {
     private var mode: PlayMode = PlayMode.ORDER
     private var index: Int = DEFAULT_MUSIC_INDEX
 
+    private val clientMessgengerList: MutableList<Messenger> = arrayListOf()
+
     val player: ExoPlayer by lazy {
         // 1. Create a default TrackSelector
         val bandwidthMeter = DefaultBandwidthMeter()
@@ -62,6 +64,7 @@ class PlayerService : Service() {
                 MSG_PLAY -> play()
                 MSG_NEXT_SONG -> next()
                 MSG_PREV_SONG -> previous()
+                MSG_UN_SUBSCRIBE_CLIENT -> clientMessgengerList.remove(msg.replyTo)
                 else -> super.handleMessage(msg)
             }
         }
@@ -155,6 +158,7 @@ class PlayerService : Service() {
         val MSG_GET_INFO = 0x03
         val MSG_NEXT_SONG = 0x04
         val MSG_PREV_SONG = 0x05
+        val MSG_UN_SUBSCRIBE_CLIENT = 0x06
 
     }
 }
