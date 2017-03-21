@@ -6,14 +6,14 @@ import java.util.*
 /**
  * Created by kang on 17-3-17.
  */
-data class PlayerState(
+data class PlayerState (
         var playlist: MutableList<Music>,
         var index: Int,
         var playMode: PlayMode,
         var playing: Boolean,
         var targetMusic: Music?) : Cloneable {
 
-    override fun clone(): PlayerState {
+    override public fun clone(): PlayerState {
         val list = ArrayList<Music>()
         playlist.forEach {
             list.add(it.copy())
