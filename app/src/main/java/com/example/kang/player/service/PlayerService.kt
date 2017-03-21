@@ -49,6 +49,12 @@ class PlayerService : Service() {
                 MSG_SWITCH -> {
                     switch(msg.obj as Uri)
                 }
+                MSG_GET_INFO->{
+                    val temp = Message.obtain(null,MSG_GET_INFO)
+                    temp.obj = player.playWhenReady
+                    msg.replyTo.send(temp)
+                    return
+                }
                 else -> {
                     super.handleMessage(msg)
                 }
@@ -103,5 +109,6 @@ class PlayerService : Service() {
         val MSG_PLAY = 0x00
         val MSG_PAUSE = 0x01
         val MSG_SWITCH = 0x02
+        val MSG_GET_INFO = 0x03
     }
 }

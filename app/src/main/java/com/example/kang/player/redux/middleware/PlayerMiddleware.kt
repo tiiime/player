@@ -9,6 +9,7 @@ import android.os.Message
 import android.os.Messenger
 import com.example.kang.player.model.PlayerState
 import com.example.kang.player.redux.Actions
+import com.example.kang.player.redux.creator.PlayerActionCreator
 import com.example.kang.player.service.PlayerService
 import com.example.redux.Action
 import com.example.redux.IDispatcher
@@ -20,6 +21,8 @@ import com.example.redux.Store
  * Created by kang on 17-3-13.
  */
 class PlayerMiddleware : Middleware<PlayerState> {
+    private var store: Store<PlayerState>? = null
+
     private var musicIntent: Intent? = null
     private var messenger: Messenger? = null
     private val localMessenger = Messenger(LocalPlayerHandler())
@@ -39,6 +42,8 @@ class PlayerMiddleware : Middleware<PlayerState> {
     }
 
     override fun create(store: Store<PlayerState>, nextDispatcher: IDispatcher): IDispatcher {
+        this.store = store
+
         return IDispatcher { action ->
             if (store.state.playlist.isNotEmpty()) dispatchAction(store, action, nextDispatcher)
         }
@@ -74,6 +79,14 @@ class PlayerMiddleware : Middleware<PlayerState> {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
             messenger = Messenger(service)
             playerBind = true
+
+            requestPlayerState()
+        }
+
+        private fun requestPlayerState() {
+            val msg = Message.obtain(null, PlayerService.MSG_GET_INFO)
+            msg.replyTo = localMessenger
+            messenger?.send(msg)
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -82,8 +95,13 @@ class PlayerMiddleware : Middleware<PlayerState> {
     }
 
     internal inner class LocalPlayerHandler : Handler() {
-        override fun handleMessage(msg: Message?) {
-            super.handleMessage(msg)
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                PlayerService.MSG_GET_INFO -> {
+                    store?.dispatch(PlayerActionCreator.updateInfo(msg.obj as Boolean))
+                }
+                else -> super.handleMessage(msg)
+            }
         }
     }
 }

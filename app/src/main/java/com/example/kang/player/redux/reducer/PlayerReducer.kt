@@ -37,6 +37,9 @@ class PlayerReducer : IReducer<PlayerState> {
                 }
                 playing = true
             }
+            Actions.ACTION_UPDATE_INFO -> return state.clone().apply {
+                playing = action.content as Boolean
+            }
         }
         return state
     }
