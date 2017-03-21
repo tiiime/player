@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
     private val DEFAULT_MUSIC_INDEX = -1
 
     val store: Store<PlayerState> = Store.create(
-            PlayerState(playlist, DEFAULT_MUSIC_INDEX, PlayMode.ORDER, false, null),
+            PlayerState(playlist, DEFAULT_MUSIC_INDEX, PlayMode.ORDER, false, null, null),
             PlayerReducer(),
             LoggerMiddleware(), playerMiddleware)
 
@@ -35,14 +35,18 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
 
         initClickEvent()
 
-        playlist.add(Music("good", 0, Uri.parse("http://192.168.0.197:8080/good.mp3")))
-        playlist.add(Music("daft", 0, Uri.parse("http://192.168.0.197:8080/daft.mp3")))
-        playlist.add(Music("marry", 0, Uri.parse("http://192.168.0.197:8080/marry.mp3")))
-        playlist.add(Music("red", 0, Uri.parse("http://192.168.0.197:8080/red.mp3")))
+        playlist.add(Music("good", 0, Uri.parse("http://192.168.0.197:8080/good.mp3"), null))
+        playlist.add(Music("daft", 0, Uri.parse("http://192.168.0.197:8080/daft.mp3"), null))
+        playlist.add(Music("marry", 0, Uri.parse("http://192.168.0.197:8080/marry.mp3"), null))
+        playlist.add(Music("red", 0, Uri.parse("http://192.168.0.197:8080/red.mp3"), null))
     }
 
     override fun onStateUpdate(): Unit = with(store.state) {
         play.isSelected = playing
+        currentMusic?.let {
+            album.setImageBitmap(currentMusic?.album)
+            name.text = currentMusic?.name
+        }
     }
 
     override fun onStart() {
