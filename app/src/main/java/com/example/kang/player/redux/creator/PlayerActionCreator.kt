@@ -12,6 +12,5 @@ object PlayerActionCreator : Action<Any>("", "") {
     fun prevSong() = Action(Actions.ACTION_PREVIOUS_SONG, Any())
     fun pause() = Action(Actions.ACTION_PAUSE_SONG, Any())
     fun play() = Action(Actions.ACTION_PLAY_SONG,Any())
-    fun switch(index: Int) = Action(Actions.ACTION_SWITCH_SONG, index)
     fun updateInfo(playing: Boolean) = Action(Actions.ACTION_UPDATE_INFO, playing)
 }

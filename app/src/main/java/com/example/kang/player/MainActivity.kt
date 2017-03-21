@@ -43,9 +43,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
 
     override fun onStateUpdate(): Unit = with(store.state) {
         play.isSelected = playing
-        targetMusic?.let {
-            store.dispatch(PlayerActionCreator.switch(index))
-        }
     }
 
     override fun onStart() {
