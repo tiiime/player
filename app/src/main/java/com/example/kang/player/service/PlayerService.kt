@@ -3,8 +3,10 @@ package com.example.kang.player.service
 import android.app.Service
 import android.content.Intent
 import android.net.Uri
-import android.os.Binder
+import android.os.Handler
 import android.os.IBinder
+import android.os.Message
+import android.os.Messenger
 import com.example.kang.player.logic.MusicStateMachine
 import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.ExoPlayer
@@ -23,43 +25,67 @@ class PlayerService : Service() {
     val bandwidthMeter = DefaultBandwidthMeter()
     val videoTrackSelectionFactory = AdaptiveVideoTrackSelection.Factory(bandwidthMeter)
     val trackSelector = DefaultTrackSelector(videoTrackSelectionFactory)
-
     // 2. Create a default LoadControl
     val loadControl = DefaultLoadControl()
-
     // 3. Create the player
     val player: ExoPlayer by lazy {
         ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl)
     }
-
     val playerSm: MusicStateMachine by lazy {
         MusicStateMachine(this.javaClass.name, player)
     }
 
-    private val playerBinder = PlayerBinder()
+    private val messenger = Messenger(PlayerServiceHandler())
 
-    fun pause() {
+    inner class PlayerServiceHandler : Handler() {
+        override fun handleMessage(msg: Message) {
+            when (msg.what) {
+                MSG_PAUSE -> {
+                    pause()
+                }
+                MSG_PLAY -> {
+                    play()
+                }
+                MSG_SWITCH -> {
+                    switch(msg.obj as Uri)
+                }
+                else -> {
+                    super.handleMessage(msg)
+                }
+            }
+        }
+    }
+
+    private fun pause() {
         playerSm.songPause()
     }
 
-    fun play() {
+    private fun play() {
         playerSm.songPlay()
     }
 
-    fun switch(uri: Uri) {
+    private fun switch(uri: Uri) {
         val source = createSourceFromUri(uri)
         playerSm.songSwitch(source)
         playerSm.songPlay()
     }
 
-    override fun onBind(intent: Intent): IBinder {
+    override fun onCreate() {
+        super.onCreate()
         playerSm.start()
-        return playerBinder
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        playerSm.songPause()
+        playerSm.stop()
+    }
+
+    override fun onBind(intent: Intent): IBinder {
+        return messenger.binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
-        playerSm.songPause()
-        playerSm.stop()
         return super.onUnbind(intent)
     }
 
@@ -73,9 +99,9 @@ class PlayerService : Service() {
         return source
     }
 
-    inner class PlayerBinder : Binder() {
-        fun getService(): PlayerService {
-            return this@PlayerService
-        }
+    companion object {
+        val MSG_PLAY = 0x00
+        val MSG_PAUSE = 0x01
+        val MSG_SWITCH = 0x02
     }
 }
