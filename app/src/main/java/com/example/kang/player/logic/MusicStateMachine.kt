@@ -62,15 +62,15 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         setInitialState(pauseState)
     }
 
-    fun play() {
+    fun songPlay() {
         sendMessage(CMD_PLAY)
     }
 
-    fun pause() {
+    fun songPause() {
         sendMessage(CMD_PAUSE)
     }
 
-    fun switch(mediaSource: MediaSource) {
+    fun songSwitch(mediaSource: MediaSource) {
         val msg = obtainMessage(CMD_SWITCH)
         msg.obj = mediaSource
         sendMessage(msg)

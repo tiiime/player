@@ -39,17 +39,17 @@ class PlayerService : Service() {
     private val playerBinder = PlayerBinder()
 
     fun pause() {
-        playerSm.pause()
+        playerSm.songPause()
     }
 
     fun play() {
-        playerSm.play()
+        playerSm.songPlay()
     }
 
     fun switch(uri: Uri) {
         val source = createSourceFromUri(uri)
-        playerSm.switch(source)
-        playerSm.play()
+        playerSm.songSwitch(source)
+        playerSm.songPlay()
     }
 
     override fun onBind(intent: Intent): IBinder {
