@@ -58,6 +58,8 @@ class PlayerService : Service() {
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
+        playerSm.songPause()
+        playerSm.stop()
         return super.onUnbind(intent)
     }
 

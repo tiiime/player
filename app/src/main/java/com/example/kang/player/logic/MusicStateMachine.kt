@@ -15,6 +15,7 @@ import com.google.android.exoplayer2.source.MediaSource
 class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name) {
 
     companion object {
+        internal val CMD_STOP_MACHINE = -1
         internal val CMD_INIT = 0x00
         internal val CMD_PLAY = 0x01
         internal val CMD_SEEK = 0x02
@@ -76,9 +77,17 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
         sendMessage(msg)
     }
 
+    fun stop() {
+        sendMessage(CMD_STOP_MACHINE)
+    }
+
     internal inner class InitState : State() {
 
         override fun processMessage(msg: Message) = when (msg.what) {
+            CMD_STOP_MACHINE -> {
+                transitionToHaltingState()
+                IState.HANDLED
+            }
             CMD_SWITCH -> {
                 deferMessage(msg)
                 transitionTo(switchState)
