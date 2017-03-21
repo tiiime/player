@@ -21,14 +21,15 @@ import com.google.android.exoplayer2.util.Util
 
 
 class PlayerService : Service() {
-    // 1. Create a default TrackSelector
-    val bandwidthMeter = DefaultBandwidthMeter()
-    val videoTrackSelectionFactory = AdaptiveVideoTrackSelection.Factory(bandwidthMeter)
-    val trackSelector = DefaultTrackSelector(videoTrackSelectionFactory)
-    // 2. Create a default LoadControl
-    val loadControl = DefaultLoadControl()
-    // 3. Create the player
+
     val player: ExoPlayer by lazy {
+        // 1. Create a default TrackSelector
+        val bandwidthMeter = DefaultBandwidthMeter()
+        val videoTrackSelectionFactory = AdaptiveVideoTrackSelection.Factory(bandwidthMeter)
+        val trackSelector = DefaultTrackSelector(videoTrackSelectionFactory)
+        // 2. Create a default LoadControl
+        val loadControl = DefaultLoadControl()
+        // 3. Create the player
         ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl)
     }
     val playerSm: MusicStateMachine by lazy {
@@ -97,7 +98,7 @@ class PlayerService : Service() {
 
     private fun createSourceFromUri(uri: Uri): ExtractorMediaSource {
         val dataSourceFactory = DefaultDataSourceFactory(this,
-                Util.getUserAgent(this, "yourApplicationName"), bandwidthMeter)
+                Util.getUserAgent(this, "yourApplicationName"), DefaultBandwidthMeter())
         // Produces Extractor instances for parsing the media data.
         val extractorsFactory = DefaultExtractorsFactory()
         val source = ExtractorMediaSource(uri,
