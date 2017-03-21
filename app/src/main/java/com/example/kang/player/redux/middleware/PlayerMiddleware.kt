@@ -60,15 +60,6 @@ class PlayerMiddleware : Middleware<PlayerState> {
             Actions.ACTION_PLAY_SONG -> {
                 messenger?.send(Message.obtain(null, PlayerService.MSG_PLAY))
             }
-            Actions.ACTION_SWITCH_SONG -> {
-                val music = store.state.playlist[action.content as Int]
-
-                val msg = Message.obtain(null, PlayerService.MSG_SWITCH)
-                msg.obj = music.uri
-
-                messenger?.send(msg)
-                return
-            }
         }
         nextDispatcher.dispatch(action)
     }
@@ -80,7 +71,14 @@ class PlayerMiddleware : Middleware<PlayerState> {
             messenger = Messenger(service)
             playerBind = true
 
+            initPlayerService()
             requestPlayerState()
+        }
+
+        private fun initPlayerService() {
+            val msg = Message.obtain(null,PlayerService.MSG_INIT_SERVICE)
+            msg.obj = store?.state
+            messenger?.send(msg)
         }
 
         private fun requestPlayerState() {
