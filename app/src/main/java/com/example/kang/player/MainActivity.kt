@@ -1,5 +1,6 @@
 package com.example.kang.player
 
+import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
@@ -17,23 +18,44 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
 
+    private val playerMiddleware = PlayerMiddleware()
+
+    private val playlist = ArrayList<Music>()
+
+    private val DEFAULT_MUSIC_INDEX = -1
+
     val store: Store<PlayerState> = Store.create(
-            PlayerState(ArrayList<Music>(), 0, PlayMode.ORDER, false, null),
+            PlayerState(playlist, DEFAULT_MUSIC_INDEX, PlayMode.ORDER, false, null),
             PlayerReducer(),
-            LoggerMiddleware(), PlayerMiddleware())
+            LoggerMiddleware(), playerMiddleware)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         initClickEvent()
+
+        playlist.add(Music("good", 0, Uri.parse("http://192.168.0.197:8080/good.mp3")))
+        playlist.add(Music("daft", 0, Uri.parse("http://192.168.0.197:8080/daft.mp3")))
+        playlist.add(Music("marry", 0, Uri.parse("http://192.168.0.197:8080/marry.mp3")))
+        playlist.add(Music("red", 0, Uri.parse("http://192.168.0.197:8080/red.mp3")))
     }
 
     override fun onStateUpdate(): Unit = with(store.state) {
         play.isSelected = playing
         targetMusic?.let {
-            store.dispatch(PlayerActionCreator.switch(it.uri))
+            store.dispatch(PlayerActionCreator.switch(index))
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        playerMiddleware.bindPlayer(this)
+    }
+
+    override fun onDestroy() {
+        playerMiddleware.releasePlayer(this)
+        super.onDestroy()
     }
 
     override fun onResume() {
