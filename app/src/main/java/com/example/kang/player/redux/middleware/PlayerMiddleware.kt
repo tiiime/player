@@ -55,6 +55,7 @@ class PlayerMiddleware : Middleware<PlayerState> {
     fun dispatchAction(action: Action<Any>, nextDispatcher: IDispatcher) {
         when (action.type) {
             Actions.ACTION_SEEK_SONG -> {
+                playerServiceConnection.seekTo(action.content as Long)
                 return
             }
             Actions.ACTION_NEXT_SONG -> {
@@ -87,6 +88,10 @@ class PlayerMiddleware : Middleware<PlayerState> {
             tryInitPlayerService()
         }
 
+        override fun onServiceDisconnected(name: ComponentName?) {
+            playerBind = false
+        }
+
         /**
          * set playlist if [PlayerService.playlist] isEmpty
          * else ignore action
@@ -108,8 +113,10 @@ class PlayerMiddleware : Middleware<PlayerState> {
             messenger?.send(msg)
         }
 
-        override fun onServiceDisconnected(name: ComponentName?) {
-            playerBind = false
+        fun seekTo(position: Long) {
+            val msg = Message.obtain(null, PlayerService.MSG_SEEK)
+            msg.obj = position
+            messenger?.send(msg)
         }
     }
 

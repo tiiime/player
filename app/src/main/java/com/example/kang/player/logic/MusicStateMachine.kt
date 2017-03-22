@@ -1,8 +1,8 @@
 package com.example.kang.player.logic
 
 import android.os.Message
-import com.example.statemachien.State
 import com.example.statemachien.IState
+import com.example.statemachien.State
 import com.example.statemachien.StateMachine
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.source.MediaSource
@@ -61,6 +61,12 @@ class MusicStateMachine(name: String, val player: ExoPlayer) : StateMachine(name
                     addState(switchState, resetState)
 
         setInitialState(pauseState)
+    }
+
+    fun songSeek(position: Long){
+        val msg = obtainMessage(CMD_SEEK)
+        msg.obj = position
+        sendMessage(msg)
     }
 
     fun songPlay() {

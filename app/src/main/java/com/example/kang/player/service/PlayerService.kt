@@ -56,10 +56,6 @@ class PlayerService : Service(), ExoEventListener {
     inner class PlayerServiceHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                MSG_SWITCH -> {
-                    switch(msg.obj as Uri)
-                    play()
-                }
                 MSG_GET_PLAYING_INFO -> {
                     val temp = Message.obtain(null, MSG_GET_PLAYING_INFO)
                     temp.obj = PlayingState(
@@ -70,6 +66,14 @@ class PlayerService : Service(), ExoEventListener {
                     )
                     msg.replyTo.send(temp)
                     return
+                }
+                MSG_SWITCH -> {
+                    switch(msg.obj as Uri)
+                    play()
+                }
+                MSG_SEEK -> {
+                    seek(msg.obj as Long)
+                    play()
                 }
                 MSG_INIT_SERVICE -> useStateOrIgnore(msg)
                 MSG_PAUSE -> pause()
@@ -97,6 +101,10 @@ class PlayerService : Service(), ExoEventListener {
             mode = state.playMode
             index = state.index
         }
+    }
+
+    private fun seek(position: Long) {
+        playerSm.songSeek(position)
     }
 
     private fun next() {
@@ -225,5 +233,6 @@ class PlayerService : Service(), ExoEventListener {
         val MSG_NEXT_SONG = 0x04
         val MSG_PREV_SONG = 0x05
         val MSG_UN_SUBSCRIBE_CLIENT = 0x06
+        val MSG_SEEK = 0x07
     }
 }

@@ -4,6 +4,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
+import android.widget.SeekBar
 import com.example.kang.player.model.Music
 import com.example.kang.player.model.PlayMode
 import com.example.kang.player.model.PlayerState
@@ -18,7 +19,11 @@ import com.google.android.exoplayer2.C
 import kotlinx.android.synthetic.main.activity_main.*
 import java.util.*
 
-class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
+class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber, SeekBar.OnSeekBarChangeListener {
+
+    private var duration = 0L
+
+    private var dragging = false
 
     private val playerMiddleware = PlayerMiddleware()
 
@@ -26,7 +31,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
 
     private val DEFAULT_MUSIC_INDEX = -1
 
-    val store: Store<PlayerState> = Store.create(
+    private val store: Store<PlayerState> = Store.create(
             PlayerState(playlist, DEFAULT_MUSIC_INDEX, PlayMode.ORDER, PlayingState(0, 0, 0, false), null, null),
             PlayerReducer(),
             LoggerMiddleware(), playerMiddleware)
@@ -42,7 +47,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
         setContentView(R.layout.activity_main)
 
         initClickEvent()
-        seekBar.max = PROGRESS_BAR_MAX
+        setViewsProperty()
 
         playlist.add(Music("good", 0, Uri.parse("http://192.168.0.108:8080/good.mp3"), null))
         playlist.add(Music("daft", 0, Uri.parse("http://192.168.0.108:8080/daft.mp3"), null))
@@ -57,10 +62,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
             name.text = currentMusic?.name
         }
         with(playingState) {
-            seekBar.progress = progressBarValue(currentPosition, duration)
+            if (!dragging) {
+                seekBar.progress = progressBarValue(currentPosition, duration)
+            }
+
             seekBar.secondaryProgress = progressBarValue(bufferPosition, duration)
-            leftTime.text = (duration - currentPosition).toString()
-            currentTime.text = currentPosition.toString()
+            leftTime.text = stringForTime(duration - currentPosition)
+            currentTime.text = stringForTime(currentPosition)
+
+            this@MainActivity.duration = duration
         }
     }
 
@@ -83,6 +93,26 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
         super.onPause()
         seekBar.removeCallbacks(updateProgressAction)
         store.unSubscribe(this)
+    }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar) {
+        dragging = false
+        seekTo(seekBar.progress)
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        dragging = true
+    }
+
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        if (fromUser && !dragging) {
+            seekTo(progress)
+        }
+    }
+
+    private fun seekTo(progress: Int) {
+        val position = positionValue(progress, duration)
+        store.dispatch(PlayerActionCreator.seekTo(position))
     }
 
     override fun onClick(v: View) = when (v.id) {
@@ -131,6 +161,30 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
         0
     } else {
         duration * progress / PROGRESS_BAR_MAX
+    }
+
+    private val formatBuilder = StringBuilder()
+    private val formatter = Formatter(formatBuilder, Locale.getDefault())
+
+    private fun stringForTime(timeMs: Long): String {
+        var timeMs = timeMs
+        if (timeMs == C.TIME_UNSET) {
+            timeMs = 0
+        }
+        val totalSeconds = (timeMs + 500) / 1000
+        val seconds = totalSeconds % 60
+        val minutes = totalSeconds / 60 % 60
+        val hours = totalSeconds / 3600
+        formatBuilder.setLength(0)
+        return if (hours > 0)
+            formatter.format("%d:%02d:%02d", hours, minutes, seconds).toString()
+        else
+            formatter.format("%02d:%02d", minutes, seconds).toString()
+    }
+
+    private fun setViewsProperty() {
+        seekBar.max = PROGRESS_BAR_MAX
+        seekBar.setOnSeekBarChangeListener(this)
     }
 
     private fun initClickEvent() {
