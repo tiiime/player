@@ -11,7 +11,7 @@ data class PlayerState (
         var playlist: MutableList<Music>,
         var index: Int,
         var playMode: PlayMode,
-        var playing: Boolean,
+        var playingState: PlayingState,
         var currentMusic: Music?,
         var targetMusic: Music?) : Cloneable {
 
@@ -21,7 +21,7 @@ data class PlayerState (
             list.add(it.copy())
         }
 
-        return PlayerState(list, index, playMode, playing, currentMusic, null)
+        return PlayerState(list, index, playMode, playingState, currentMusic, null)
     }
 }
 
