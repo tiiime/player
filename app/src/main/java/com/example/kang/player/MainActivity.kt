@@ -31,6 +31,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
             PlayerReducer(),
             LoggerMiddleware(), playerMiddleware)
 
+    private val updateProgressAction: Runnable by lazy {
+        Runnable {
+            updateProgress()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -75,6 +81,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
 
     override fun onPause() {
         super.onPause()
+        seekBar.removeCallbacks(updateProgressAction)
         store.unSubscribe(this)
     }
 
@@ -96,13 +103,21 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber {
         }
         R.id.play -> {
             if (play.isSelected) {
+                seekBar.removeCallbacks(updateProgressAction)
                 store.dispatch(PlayerActionCreator.pause())
             } else {
+                updateProgress()
                 store.dispatch(PlayerActionCreator.play())
             }
         }
         else -> {
         }
+    }
+
+    private fun updateProgress() {
+        store.dispatch(PlayerActionCreator.requestUpdatePlayStateInfo())
+        seekBar.removeCallbacks(updateProgressAction)
+        seekBar.postDelayed(updateProgressAction, 1000L)
     }
 
     private fun progressBarValue(position: Long, duration: Long): Int = when (duration) {

@@ -61,8 +61,6 @@ class PlayerService : Service(), ExoEventListener {
                     play()
                 }
                 MSG_GET_PLAYING_INFO -> {
-                    clientMessengerList.add(msg.replyTo)
-
                     val temp = Message.obtain(null, MSG_GET_PLAYING_INFO)
                     temp.obj = PlayingState(
                             duration = player.duration,
@@ -87,6 +85,7 @@ class PlayerService : Service(), ExoEventListener {
          * accept state when [PlayerService.playlist] is empty
          */
         private fun useStateOrIgnore(msg: Message) {
+            clientMessengerList.add(msg.replyTo)
             val state = msg.obj as PlayerState
 
             if (playlist.isNotEmpty()) {
@@ -179,10 +178,11 @@ class PlayerService : Service(), ExoEventListener {
     }
 
     private fun notifyClient(caseAction: Int, obj: Any) {
-        val msg = Message.obtain(null, caseAction)
-        msg.obj = obj
-
-        clientMessengerList.forEach { it.send(msg) }
+        clientMessengerList.forEach {
+            val msg = Message.obtain(null, caseAction)
+            msg.obj = obj
+            it.send(msg)
+        }
     }
 
     override fun onCreate() {

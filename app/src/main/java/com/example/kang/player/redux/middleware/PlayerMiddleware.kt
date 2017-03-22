@@ -69,6 +69,10 @@ class PlayerMiddleware : Middleware<PlayerState> {
             Actions.ACTION_PLAY_SONG -> {
                 messenger?.send(Message.obtain(null, PlayerService.MSG_PLAY))
             }
+            Actions.ACTION_REQUEST_UPDATE_PLAY_STATE_INFO -> {
+                playerServiceConnection.requestPlayerState()
+                return
+            }
         }
         nextDispatcher.dispatch(action)
     }
@@ -81,7 +85,6 @@ class PlayerMiddleware : Middleware<PlayerState> {
             playerBind = true
 
             tryInitPlayerService()
-            requestPlayerState()
         }
 
         /**
@@ -90,6 +93,7 @@ class PlayerMiddleware : Middleware<PlayerState> {
          */
         private fun tryInitPlayerService() {
             val msg = Message.obtain(null,PlayerService.MSG_INIT_SERVICE)
+            msg.replyTo = localMessenger
             msg.obj = store?.state
             messenger?.send(msg)
         }
@@ -98,7 +102,7 @@ class PlayerMiddleware : Middleware<PlayerState> {
          * request [PlayerService] current playing state
          * in this action we will register our [localMessenger] to [PlayerService]
          */
-        private fun requestPlayerState() {
+        fun requestPlayerState() {
             val msg = Message.obtain(null, PlayerService.MSG_GET_PLAYING_INFO)
             msg.replyTo = localMessenger
             messenger?.send(msg)

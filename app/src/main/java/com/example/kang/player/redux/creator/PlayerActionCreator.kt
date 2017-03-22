@@ -16,4 +16,5 @@ object PlayerActionCreator : Action<Any>("", "") {
     fun play() = Action(Actions.ACTION_PLAY_SONG,Any())
     fun updatePlayStateInfo(state: PlayingState) = Action(Actions.ACTION_UPDATE_PLAY_STATE_INFO, state)
     fun updateSongInfo(music: Music) = Action(Actions.ACTION_UPDATE_SONG_INFO, music)
+    fun requestUpdatePlayStateInfo() = Action(Actions.ACTION_REQUEST_UPDATE_PLAY_STATE_INFO, Any())
 }
