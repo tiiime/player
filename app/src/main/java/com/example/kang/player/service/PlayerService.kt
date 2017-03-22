@@ -16,18 +16,21 @@ import com.example.kang.player.util.ExoEventListener
 import com.example.kang.player.util.getArtistName
 import com.example.kang.player.util.getArtwork
 import com.example.kang.player.util.getSongName
+import com.facebook.stetho.okhttp3.StethoInterceptor
 import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
+import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.AdaptiveVideoTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
+import okhttp3.OkHttpClient
 
 
 class PlayerService : Service(), ExoEventListener {
@@ -212,13 +215,15 @@ class PlayerService : Service(), ExoEventListener {
         return super.onUnbind(intent)
     }
 
-    private fun createSourceFromUri(uri: Uri): ExtractorMediaSource {
-        val dataSourceFactory = DefaultDataSourceFactory(this,
-                Util.getUserAgent(this, "yourApplicationName"), DefaultBandwidthMeter())
+    private fun createSourceFromUri(uri: Uri): MediaSource {
+        val okhttpFactory = OkHttpDataSourceFactory(OkHttpClient.Builder().addNetworkInterceptor(StethoInterceptor()).build()
+                , "Player", null)
+        val dataSourceFactory = DefaultDataSourceFactory(this, DefaultBandwidthMeter(), okhttpFactory)
         // Produces Extractor instances for parsing the media data.
         val extractorsFactory = DefaultExtractorsFactory()
         val source = ExtractorMediaSource(uri,
                 dataSourceFactory, extractorsFactory, null, null)
+
         return source
     }
 
