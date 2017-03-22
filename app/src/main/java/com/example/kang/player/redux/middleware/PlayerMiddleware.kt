@@ -9,6 +9,7 @@ import android.os.Message
 import android.os.Messenger
 import com.example.kang.player.model.Music
 import com.example.kang.player.model.PlayerState
+import com.example.kang.player.model.PlayingState
 import com.example.kang.player.redux.Actions
 import com.example.kang.player.redux.creator.PlayerActionCreator
 import com.example.kang.player.service.PlayerService
@@ -98,7 +99,7 @@ class PlayerMiddleware : Middleware<PlayerState> {
          * in this action we will register our [localMessenger] to [PlayerService]
          */
         private fun requestPlayerState() {
-            val msg = Message.obtain(null, PlayerService.MSG_GET_INFO)
+            val msg = Message.obtain(null, PlayerService.MSG_GET_PLAYING_INFO)
             msg.replyTo = localMessenger
             messenger?.send(msg)
         }
@@ -114,8 +115,8 @@ class PlayerMiddleware : Middleware<PlayerState> {
     internal inner class LocalPlayerHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
-                PlayerService.MSG_GET_INFO -> {
-                    store?.dispatch(PlayerActionCreator.updatePlayStateInfo(msg.obj as Boolean))
+                PlayerService.MSG_GET_PLAYING_INFO -> {
+                    store?.dispatch(PlayerActionCreator.updatePlayStateInfo(msg.obj as PlayingState))
                 }
                 PlayerService.MSG_SWITCH -> {
                     store?.dispatch(PlayerActionCreator.updateSongInfo(msg.obj as Music))

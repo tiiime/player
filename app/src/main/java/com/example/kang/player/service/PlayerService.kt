@@ -11,6 +11,7 @@ import com.example.kang.player.logic.MusicStateMachine
 import com.example.kang.player.model.Music
 import com.example.kang.player.model.PlayMode
 import com.example.kang.player.model.PlayerState
+import com.example.kang.player.model.PlayingState
 import com.example.kang.player.util.ExoEventListener
 import com.example.kang.player.util.getArtistName
 import com.example.kang.player.util.getArtwork
@@ -59,11 +60,16 @@ class PlayerService : Service(), ExoEventListener {
                     switch(msg.obj as Uri)
                     play()
                 }
-                MSG_GET_INFO -> {
+                MSG_GET_PLAYING_INFO -> {
                     clientMessengerList.add(msg.replyTo)
 
-                    val temp = Message.obtain(null, MSG_GET_INFO)
-                    temp.obj = player.playWhenReady
+                    val temp = Message.obtain(null, MSG_GET_PLAYING_INFO)
+                    temp.obj = PlayingState(
+                            duration = player.duration,
+                            currentPosition = player.currentPosition,
+                            bufferPosition = player.bufferedPosition,
+                            playing = player.playWhenReady
+                    )
                     msg.replyTo.send(temp)
                     return
                 }
@@ -135,7 +141,7 @@ class PlayerService : Service(), ExoEventListener {
                 (0..trackGroup.length - 1).forEach { j ->
                     val metadata = trackGroup.getFormat(j).metadata
                     metadata?.let {
-                        notifyClient(Music(
+                        notifyClient(MSG_SWITCH, Music(
                                 "${metadata.getSongName()}-${metadata.getArtistName()}",
                                 0,
                                 Uri.EMPTY,
@@ -147,9 +153,34 @@ class PlayerService : Service(), ExoEventListener {
         }
     }
 
-    private fun notifyClient(music: Music) {
-        val msg = Message.obtain(null, MSG_SWITCH)
-        msg.obj = music
+    override fun onPositionDiscontinuity() {
+        super.onPositionDiscontinuity()
+        updateProgressBar()
+    }
+
+    override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+        super.onPlayerStateChanged(playWhenReady, playbackState)
+        updateProgressBar()
+    }
+
+
+    override fun onLoadingChanged(isLoading: Boolean) {
+        super.onLoadingChanged(isLoading)
+        updateProgressBar()
+    }
+
+    private fun updateProgressBar() {
+        notifyClient(MSG_GET_PLAYING_INFO, PlayingState(
+                duration = player.duration,
+                currentPosition = player.currentPosition,
+                bufferPosition = player.bufferedPosition,
+                playing = player.playWhenReady
+        ))
+    }
+
+    private fun notifyClient(caseAction: Int, obj: Any) {
+        val msg = Message.obtain(null, caseAction)
+        msg.obj = obj
 
         clientMessengerList.forEach { it.send(msg) }
     }
@@ -190,10 +221,9 @@ class PlayerService : Service(), ExoEventListener {
         val MSG_PLAY = 0x00
         val MSG_PAUSE = 0x01
         val MSG_SWITCH = 0x02
-        val MSG_GET_INFO = 0x03
+        val MSG_GET_PLAYING_INFO = 0x03
         val MSG_NEXT_SONG = 0x04
         val MSG_PREV_SONG = 0x05
         val MSG_UN_SUBSCRIBE_CLIENT = 0x06
-
     }
 }
