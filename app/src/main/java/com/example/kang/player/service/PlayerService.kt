@@ -12,11 +12,7 @@ import com.example.kang.player.model.Music
 import com.example.kang.player.model.PlayMode
 import com.example.kang.player.model.PlayerState
 import com.example.kang.player.model.PlayingState
-import com.example.kang.player.util.ExoEventListener
-import com.example.kang.player.util.getArtistName
-import com.example.kang.player.util.getArtwork
-import com.example.kang.player.util.getSongName
-import com.facebook.stetho.okhttp3.StethoInterceptor
+import com.example.kang.player.util.*
 import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
@@ -30,7 +26,6 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import okhttp3.OkHttpClient
 
 
 class PlayerService : Service(), ExoEventListener {
@@ -216,7 +211,7 @@ class PlayerService : Service(), ExoEventListener {
     }
 
     private fun createSourceFromUri(uri: Uri): MediaSource {
-        val okhttpFactory = OkHttpDataSourceFactory(OkHttpClient.Builder().addNetworkInterceptor(StethoInterceptor()).build()
+        val okhttpFactory = OkHttpDataSourceFactory(OkHttpClientProvider.getCacheClient()
                 , "Player", null)
         val dataSourceFactory = DefaultDataSourceFactory(this, DefaultBandwidthMeter(), okhttpFactory)
         // Produces Extractor instances for parsing the media data.
