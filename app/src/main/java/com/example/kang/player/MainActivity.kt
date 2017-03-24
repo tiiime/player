@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber, Seek
         setContentView(R.layout.activity_main)
 
         initClickEvent()
-        setViewsProperty()
+        initViewsProperty()
 
         playlist.add(Music("good", 0, Uri.parse("http://192.168.0.108:8080/good.mp3"), null))
         playlist.add(Music("daft", 0, Uri.parse("http://192.168.0.108:8080/daft.mp3"), null))
@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber, Seek
             formatter.format("%02d:%02d", minutes, seconds).toString()
     }
 
-    private fun setViewsProperty() {
+    private fun initViewsProperty() {
         seekBar.max = PROGRESS_BAR_MAX
         seekBar.setOnSeekBarChangeListener(this)
     }
