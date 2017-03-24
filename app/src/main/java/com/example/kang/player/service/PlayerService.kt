@@ -16,8 +16,7 @@ import com.example.kang.player.util.*
 import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
+import com.google.android.exoplayer2.extractor.mp3.Mp3Extractor
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.TrackGroupArray
@@ -26,6 +25,10 @@ import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.cache.CacheDataSource.FLAG_BLOCK_ON_CACHE
+import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory
+import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
+import com.google.android.exoplayer2.upstream.cache.SimpleCache
 
 
 class PlayerService : Service(), ExoEventListener {
@@ -211,13 +214,13 @@ class PlayerService : Service(), ExoEventListener {
     }
 
     private fun createSourceFromUri(uri: Uri): MediaSource {
-        val okhttpFactory = OkHttpDataSourceFactory(OkHttpClientProvider.getCacheClient()
-                , "Player", null)
-        val dataSourceFactory = DefaultDataSourceFactory(this, DefaultBandwidthMeter(), okhttpFactory)
-        // Produces Extractor instances for parsing the media data.
-        val extractorsFactory = DefaultExtractorsFactory()
-        val source = ExtractorMediaSource(uri,
-                dataSourceFactory, extractorsFactory, null, null)
+        val dataSourceFactory = DefaultDataSourceFactory(this, "Player", DefaultBandwidthMeter())
+
+        val cache = SimpleCache(cacheDir, LeastRecentlyUsedCacheEvictor(1024 * 1024 * 30))
+        val cacheDataSourceFactory = CacheDataSourceFactory(cache, dataSourceFactory, FLAG_BLOCK_ON_CACHE)
+
+        val mp3ExtraFactory = Mp3Extractor.FACTORY
+        val source = ExtractorMediaSource(uri, cacheDataSourceFactory, mp3ExtraFactory, null, null)
 
         return source
     }
