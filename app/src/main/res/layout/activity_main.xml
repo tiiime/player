@@ -31,6 +31,13 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
+    <ImageView
+            android:tint="@color/colorAccent"
+            android:src="@drawable/ic_file_download_white_36dp"
+            android:id="@+id/download"
+            android:layout_width="36dp"
+            android:layout_height="36dp"/>
+
     <LinearLayout
             android:padding="10dp"
             android:gravity="center"
