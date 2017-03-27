@@ -3,6 +3,7 @@ package com.example.kang.player.redux.middleware
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.IBinder
 import android.os.Message
@@ -74,6 +75,10 @@ class PlayerMiddleware : Middleware<PlayerState> {
                 playerServiceConnection.requestPlayerState()
                 return
             }
+            Actions.ACTION_SAVE_FILE -> {
+                playerServiceConnection.saveFile(action.content as Uri)
+                return
+            }
         }
         nextDispatcher.dispatch(action)
     }
@@ -116,6 +121,12 @@ class PlayerMiddleware : Middleware<PlayerState> {
         fun seekTo(position: Long) {
             val msg = Message.obtain(null, PlayerService.MSG_SEEK)
             msg.obj = position
+            messenger?.send(msg)
+        }
+
+        fun saveFile(uri: Uri) {
+            val msg = Message.obtain(null, PlayerService.MSG_SAVE)
+            msg.obj = uri
             messenger?.send(msg)
         }
     }

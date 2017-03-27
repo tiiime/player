@@ -140,6 +140,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber, Seek
                 store.dispatch(PlayerActionCreator.play())
             }
         }
+        R.id.download -> {
+            val url = store.state.currentMusic?.uri
+            url?.let {
+                store.dispatch(PlayerActionCreator.saveFile(url))
+            }
+            Unit
+        }
         else -> {
         }
     }
@@ -196,6 +203,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener, Subscriber, Seek
         previous.setOnClickListener(this)
         play.setOnClickListener(this)
         next.setOnClickListener(this)
+        download.setOnClickListener(this)
     }
 
     companion object {
