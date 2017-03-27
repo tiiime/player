@@ -1,5 +1,6 @@
 package com.example.kang.player.redux.creator
 
+import android.net.Uri
 import com.example.kang.player.model.Music
 import com.example.kang.player.model.PlayingState
 import com.example.kang.player.redux.Actions
@@ -17,4 +18,5 @@ object PlayerActionCreator : Action<Any>("", "") {
     fun updatePlayStateInfo(state: PlayingState) = Action(Actions.ACTION_UPDATE_PLAY_STATE_INFO, state)
     fun updateSongInfo(music: Music) = Action(Actions.ACTION_UPDATE_SONG_INFO, music)
     fun requestUpdatePlayStateInfo() = Action(Actions.ACTION_REQUEST_UPDATE_PLAY_STATE_INFO, Any())
+    fun saveFile(uri: Uri) = Action(Actions.ACTION_SAVE_FILE, uri)
 }
