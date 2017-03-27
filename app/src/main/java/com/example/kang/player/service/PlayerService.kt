@@ -3,19 +3,16 @@ package com.example.kang.player.service
 import android.app.Service
 import android.content.Intent
 import android.net.Uri
-import android.os.Handler
-import android.os.IBinder
-import android.os.Message
-import android.os.Messenger
+import android.os.*
 import com.example.kang.player.logic.MusicStateMachine
 import com.example.kang.player.model.Music
 import com.example.kang.player.model.PlayMode
 import com.example.kang.player.model.PlayerState
 import com.example.kang.player.model.PlayingState
 import com.example.kang.player.util.*
-import com.google.android.exoplayer2.DefaultLoadControl
 import com.google.android.exoplayer2.ExoPlayerFactory
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.extractor.mp3.Mp3Extractor
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
@@ -23,20 +20,30 @@ import com.google.android.exoplayer2.source.TrackGroupArray
 import com.google.android.exoplayer2.trackselection.AdaptiveVideoTrackSelection
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray
+import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.cache.CacheDataSource.FLAG_BLOCK_ON_CACHE
+import com.google.android.exoplayer2.upstream.cache.Cache
 import com.google.android.exoplayer2.upstream.cache.CacheDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.LeastRecentlyUsedCacheEvictor
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
+import okhttp3.OkHttpClient
+import okio.Buffer
+import okio.Okio
+import java.io.File
+import kotlin.concurrent.thread
 
 
 class PlayerService : Service(), ExoEventListener {
+    private val BUFFER_SIZE = 1024 * 1024
     private val playlist: MutableList<Music> = arrayListOf()
     private var mode: PlayMode = PlayMode.ORDER
     private var index: Int = DEFAULT_MUSIC_INDEX
 
     private val clientMessengerList: MutableList<Messenger> = arrayListOf()
+
+    val cache: Cache by lazy {
+        SimpleCache(cacheDir, LeastRecentlyUsedCacheEvictor(1024 * 1024 * 100))
+    }
 
     val player: SimpleExoPlayer by lazy {
         // 1. Create a default TrackSelector
@@ -44,7 +51,7 @@ class PlayerService : Service(), ExoEventListener {
         val videoTrackSelectionFactory = AdaptiveVideoTrackSelection.Factory(bandwidthMeter)
         val trackSelector = DefaultTrackSelector(videoTrackSelectionFactory)
         // 2. Create a default LoadControl
-        val loadControl = DefaultLoadControl()
+        val loadControl = CustomLoadControl()
         // 3. Create the player
         ExoPlayerFactory.newSimpleInstance(this, trackSelector, loadControl)
     }
@@ -54,6 +61,7 @@ class PlayerService : Service(), ExoEventListener {
 
     private val messenger = Messenger(PlayerServiceHandler())
 
+    //TODO: clean clean clean
     inner class PlayerServiceHandler : Handler() {
         override fun handleMessage(msg: Message) {
             when (msg.what) {
@@ -79,6 +87,7 @@ class PlayerService : Service(), ExoEventListener {
                 MSG_INIT_SERVICE -> useStateOrIgnore(msg)
                 MSG_PAUSE -> pause()
                 MSG_PLAY -> play()
+                MSG_SAVE -> saveFile(msg.obj as Uri)
                 MSG_NEXT_SONG -> next()
                 MSG_PREV_SONG -> previous()
                 MSG_UN_SUBSCRIBE_CLIENT -> clientMessengerList.remove(msg.replyTo)
@@ -142,6 +151,37 @@ class PlayerService : Service(), ExoEventListener {
         playerSm.songSwitch(source)
     }
 
+    private fun saveFile(uri: Uri) {
+
+        thread(start = true) {
+            val dataSourceFactory = OkHttpDataSourceFactory(okHttpClient, "Player", DefaultBandwidthMeter())
+            val cacheDataSourceFactory = CacheDataSourceFactory(cache, dataSourceFactory, 0)
+
+            val data = DataSpec(uri)
+            val dataSource = cacheDataSourceFactory.createDataSource()
+            val contentLength = dataSource.open(data)
+
+            val buffer = ByteArray(BUFFER_SIZE)
+
+            var receivedLength = 0L
+            var readLength = 0
+            val file = File("${Environment.getExternalStorageDirectory().path}/test/${uri.lastPathSegment}")
+            val sink = Okio.sink(file)
+            val buf = Buffer()
+
+            while (receivedLength < contentLength) {
+                readLength = dataSource.read(buffer, 0, BUFFER_SIZE)
+                receivedLength += readLength
+
+                buf.clear()
+                buf.write(buffer)
+                sink.write(buf, readLength.toLong())
+            }
+            sink.flush()
+        }
+
+    }
+
     override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
         trackGroups?.let {
             (0..trackGroups.length - 1).forEach { i ->
@@ -152,7 +192,7 @@ class PlayerService : Service(), ExoEventListener {
                         notifyClient(MSG_SWITCH, Music(
                                 "${metadata.getSongName()}-${metadata.getArtistName()}",
                                 0,
-                                Uri.EMPTY,
+                                playlist[index].uri,
                                 metadata.getArtwork()
                         ))
                     }
@@ -213,11 +253,12 @@ class PlayerService : Service(), ExoEventListener {
         return super.onUnbind(intent)
     }
 
-    private fun createSourceFromUri(uri: Uri): MediaSource {
-        val dataSourceFactory = DefaultDataSourceFactory(this, "Player", DefaultBandwidthMeter())
+    private val okHttpClient = OkHttpClient()
 
-        val cache = SimpleCache(cacheDir, LeastRecentlyUsedCacheEvictor(1024 * 1024 * 30))
-        val cacheDataSourceFactory = CacheDataSourceFactory(cache, dataSourceFactory, FLAG_BLOCK_ON_CACHE)
+    private fun createSourceFromUri(uri: Uri): MediaSource {
+        val dataSourceFactory = OkHttpDataSourceFactory(okHttpClient, "Player", DefaultBandwidthMeter())
+
+        val cacheDataSourceFactory = CacheDataSourceFactory(cache, dataSourceFactory, 0)
 
         val mp3ExtraFactory = Mp3Extractor.FACTORY
         val source = ExtractorMediaSource(uri, cacheDataSourceFactory, mp3ExtraFactory, null, null)
@@ -237,5 +278,6 @@ class PlayerService : Service(), ExoEventListener {
         val MSG_PREV_SONG = 0x05
         val MSG_UN_SUBSCRIBE_CLIENT = 0x06
         val MSG_SEEK = 0x07
+        val MSG_SAVE = 0x08
     }
 }
